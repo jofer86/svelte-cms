@@ -1,6 +1,7 @@
 test-results
 node_modules
 /instructions
+/notebooks
 
 # Output
 .output

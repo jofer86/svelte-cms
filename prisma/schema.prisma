@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -18,9 +15,8 @@ model User {
   email          String    @unique
   hashedPassword String
   role           Role      @default(USER)
-  products       Product[]
+  articles       Article[]
   sessions       Session[]
-  passwordResets PasswordReset[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }
@@ -35,62 +31,42 @@ model Session {
   @@index([userId])
 }
 
-model PasswordReset {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  usedAt    DateTime?
-
-  @@index([token])
-  @@index([userId])
-}
-
-model Product {
-  id        String   @id @default(uuid())
-  name      String
-  sku       String   @unique
-  price     Float
-  ownerId   String
-  owner     User     @relation(fields: [ownerId], references: [id])
-  inventory Inventory[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([ownerId])
-  @@index([sku])
-}
-
-model Warehouse {
-  id        String      @id @default(uuid())
-  name      String
-  location  String
-  capacity  Int
-  inventory Inventory[]
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-
-  @@index([name])
-}
-
-model Inventory {
+model Article {
   id          String    @id @default(uuid())
-  warehouseId String
-  productId   String
-  quantity    Int
-  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
-  product     Product   @relation(fields: [productId], references: [id])
+  title       String
+  slug        String    @unique
+  content     String    @db.Text
+  status      Status    @default(DRAFT)
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id])
+  tags        Tag[]
+  metadata    Json      @default("{}")
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  publishedAt DateTime?
 
-  @@unique([warehouseId, productId])
-  @@index([warehouseId])
-  @@index([productId])
+  @@index([authorId])
+  @@index([status])
+  @@index([slug])
+}
+
+model Tag {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  articles  Article[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([name])
 }
 
 enum Role {
   USER
   ADMIN
+}
+
+enum Status {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
 }
